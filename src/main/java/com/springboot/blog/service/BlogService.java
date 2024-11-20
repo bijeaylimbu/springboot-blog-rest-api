@@ -17,4 +17,5 @@ public interface BlogService {
     void deletePostById(long id);
 
     List<BlogDto> getPostsByCategory(Long categoryId);
+    List<BlogDto> searchBlog(String blogTitle);
 }

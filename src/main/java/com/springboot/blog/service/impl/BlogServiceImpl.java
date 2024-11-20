@@ -21,15 +21,15 @@ import java.util.stream.Collectors;
 @Service
 public class BlogServiceImpl implements BlogService {
 
-    private BlogRepository postRepository;
+    private BlogRepository blogRepository;
 
     private ModelMapper mapper;
 
     private CategoryRepository categoryRepository;
 
-    public BlogServiceImpl(BlogRepository postRepository, ModelMapper mapper,
+    public BlogServiceImpl(BlogRepository blogRepository, ModelMapper mapper,
                            CategoryRepository categoryRepository) {
-          this.postRepository = postRepository;
+          this.blogRepository = blogRepository;
           this.mapper = mapper;
           this.categoryRepository = categoryRepository;
     }
@@ -43,7 +43,7 @@ public class BlogServiceImpl implements BlogService {
         // convert DTO to entity
         Blog post = mapToEntity(postDto);
         post.setCategory(category);
-        Blog newPost = postRepository.save(post);
+        Blog newPost = blogRepository.save(post);
 
         // convert entity to DTO
         BlogDto postResponse = mapToDTO(newPost);
@@ -59,7 +59,7 @@ public class BlogServiceImpl implements BlogService {
         // create Pageable instance
         Pageable pageable = PageRequest.of(pageNo, pageSize, sort);
 
-        Page<Blog> posts = postRepository.findAll(pageable);
+        Page<Blog> posts = blogRepository.findAll(pageable);
 
         // get content for page object
         List<Blog> listOfPosts = posts.getContent();
@@ -79,14 +79,14 @@ public class BlogServiceImpl implements BlogService {
 
     @Override
     public BlogDto getPostById(long id) {
-        Blog post = postRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Post", "id", id));
+        Blog post = blogRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Post", "id", id));
         return mapToDTO(post);
     }
 
     @Override
     public BlogDto updatePost(BlogDto postDto, long id) {
         // get post by id from the database
-        Blog post = postRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Post", "id", id));
+        Blog post = blogRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Post", "id", id));
 
         Category category = categoryRepository.findById(postDto.getCategoryId())
                         .orElseThrow(() -> new ResourceNotFoundException("Category", "id", postDto.getCategoryId()));
@@ -94,15 +94,15 @@ public class BlogServiceImpl implements BlogService {
         post.setTitle(postDto.getTitle());
         post.setContent(postDto.getContent());
         post.setCategory(category);
-        Blog updatedPost = postRepository.save(post);
+        Blog updatedPost = blogRepository.save(post);
         return mapToDTO(updatedPost);
     }
 
     @Override
     public void deletePostById(long id) {
         // get post by id from the database
-        Blog post = postRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Post", "id", id));
-        postRepository.delete(post);
+        Blog post = blogRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Post", "id", id));
+        blogRepository.delete(post);
     }
 
     @Override
@@ -111,9 +111,16 @@ public class BlogServiceImpl implements BlogService {
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new ResourceNotFoundException("Category", "id", categoryId));
 
-        List<Blog> posts = postRepository.findByCategoryId(categoryId);
+        List<Blog> posts = blogRepository.findByCategoryId(categoryId);
 
         return posts.stream().map((post) -> mapToDTO(post))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<BlogDto> searchBlog(String blogTitle) {
+       List<Blog> blogs= blogRepository.searchBlogByBlogTitle(blogTitle);
+      return  blogs.stream().map((blog) -> mapToDTO(blog))
                 .collect(Collectors.toList());
     }
 
